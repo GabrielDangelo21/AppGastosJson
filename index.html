@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Finanças</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1><i class="fas fa-wallet" style="color: var(--accent);"></i> Meu Controle Financeiro</h1>
+        <div class="dashboard-cards">
+            <div class="card-resumo despesa clickable" onclick="abrirModalTransacoesMoeda('BRL')">
+                <h3>Total Despesas (BRL)</h3>
+                <p id="total-despesas-brl">R$ 0,00</p>
+                <small><i class="fas fa-search-plus"></i> Clique para ver detalhes</small>
+            </div>
+            <div class="card-resumo despesa-eur clickable" onclick="abrirModalTransacoesMoeda('EUR')">
+                <h3>Total Despesas (EUR)</h3>
+                <p id="total-despesas-eur">0,00 €</p>
+                <small><i class="fas fa-search-plus"></i> Clique para ver detalhes</small>
+            </div>
+            <div class="dashboard-cards">
+            </div>
+
+        </div>
+        <div id="modal-transacoes-moeda" class="modal-overlay" style="display: none;">
+            <div class="card list-modal" style="width: 800px; max-width: 95%;">
+                <div class="modal-header">
+                    <h2 id="titulo-modal-moeda">Transações</h2>
+                    <button class="btn-close"
+                        onclick="document.getElementById('modal-transacoes-moeda').style.display='none'">&times;</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #444; color: #888; text-align: left;">
+                                <th style="padding: 10px;">Data</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Valor</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-moeda">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row-container">
+
+            <div class="card half-card">
+                <h2>
+                    <span><i class="fas fa-plus-circle"></i> Nova Transação</span>
+                    <button type="button" class="btn-ver-tudo" onclick="abrirExtratoCompleto()">
+                        <i class="fas fa-list-ul"></i> Ver Extrato
+                    </button>
+                </h2>
+                <form id="form-transacao">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Data:</label>
+                            <input type="date" id="data" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Valor:</label>
+                            <input type="number" id="valor" step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label>Descrição:</label>
+                        <input type="text" id="descricao" placeholder="Ex: Mercado" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Moeda:</label>
+                            <select id="moeda">
+                                <option value="BRL">R$ (Real)</option>
+                                <option value="EUR">€ (Euro)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Categoria:</label>
+                            <select id="categoria" required>
+                                <option value="">Carregando...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Adicionar Transação</button>
+                </form>
+            </div>
+
+            <div class="card half-card">
+                <h2>
+                    <span><i class="fas fa-tags"></i> Nova Categoria</span>
+                    <button type="button" class="btn-ver-tudo" onclick="abrirModalListaCategorias()">
+                        <i class="fas fa-list"></i> Ver Lista
+                    </button>
+                </h2>
+
+                <form id="form-categoria">
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label>Nome da Categoria:</label>
+                        <input type="text" id="cat-nome" placeholder="Ex: Lazer" required>
+                    </div>
+
+                    <div class="input-group" style="margin-bottom: 25px;">
+                        <label>Tipo:</label>
+                        <select id="cat-tipo">
+                            <option value="Despesa" selected>Despesa (Saída)</option>
+                            <option value="Receita">Receita (Entrada)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Criar Categoria</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    <div id="modal-lista-categorias" class="modal-overlay" style="display: none;">
+        <div class="card list-modal" style="width: 500px;">
+            <div class="modal-header">
+                <h2>Gerenciar Categorias</h2>
+                <button class="btn-close"
+                    onclick="document.getElementById('modal-lista-categorias').style.display='none'">&times;</button>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #444; color: #888;">
+                        <th style="padding: 10px;">Nome</th>
+                        <th>Tipo</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-categorias-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-editar-categoria" class="modal-overlay" style="display: none;">
+        <div class="card" style="width: 400px;">
+            <div class="modal-header">
+                <h2>Editar Categoria</h2>
+                <button class="btn-close"
+                    onclick="document.getElementById('modal-editar-categoria').style.display='none'">&times;</button>
+            </div>
+            <form id="form-editar-categoria">
+                <input type="hidden" id="edit-cat-id">
+
+                <div class="input-group">
+                    <label>Nome da Categoria:</label>
+                    <input type="text" id="edit-cat-nome" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Tipo:</label>
+                    <select id="edit-cat-tipo">
+                        <option value="Receita">Receita (Entrada)</option>
+                        <option value="Despesa">Despesa (Saída)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit" style="margin-top: 15px;">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-editar-transacao" class="modal-overlay" style="display: none;">
+        <div class="card" style="width: 450px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Editar Transação</h2>
+                <button class="btn-close"
+                    onclick="document.getElementById('modal-editar-transacao').style.display='none'">&times;</button>
+            </div>
+            <form id="form-editar-transacao">
+                <input type="hidden" id="edit-trans-id">
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Data:</label>
+                        <input type="date" id="edit-trans-data" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Valor:</label>
+                        <input type="number" id="edit-trans-valor" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Descrição:</label>
+                    <input type="text" id="edit-trans-descricao" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Moeda:</label>
+                        <select id="edit-trans-moeda">
+                            <option value="BRL">R$ (Real)</option>
+                            <option value="EUR">€ (Euro)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Categoria:</label>
+                        <select id="edit-trans-categoria" required>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" style="margin-top: 10px;">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+
+</html>
