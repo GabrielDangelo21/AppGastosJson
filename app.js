@@ -231,34 +231,49 @@ function configurarFormularios() {
         });
     }
 
-    // 3. EDITAR TRANSAÇÃO
+    // 3. EDITAR TRANSAÇÃO (COM TODOS OS CAMPOS)
     const formEdit = document.getElementById('form-editar-transacao');
     if (formEdit) {
         formEdit.addEventListener('submit', (e) => {
             e.preventDefault();
 
+            const id = parseInt(document.getElementById('edit-trans-id').value);
             const inputData = document.getElementById('edit-trans-data').value;
             const hoje = new Date().toISOString().split('T')[0];
+
             if (inputData > hoje) {
                 alert("⚠️ Data futura não permitida na edição!");
                 return;
             }
 
-            const id = parseInt(document.getElementById('edit-trans-id').value);
             const index = DB.transacoes.findIndex(t => t.id === id);
 
             if (index !== -1) {
                 const transacaoAntiga = DB.transacoes[index];
-                let novoValor = parseFloat(document.getElementById('edit-trans-valor').value);
 
-                if (transacaoAntiga.valor < 0) novoValor = -Math.abs(novoValor);
+                // Pega os novos valores
+                let novoValor = parseFloat(document.getElementById('edit-trans-valor').value);
+                const novaCategoriaId = parseInt(document.getElementById('edit-trans-categoria').value);
+                const novaMoeda = document.getElementById('edit-trans-moeda').value;
+
+                // Descobre se a nova categoria é Despesa ou Receita
+                const catObj = DB.categorias.find(c => c.id === novaCategoriaId);
+                const ehDespesa = catObj ? catObj.tipo === 'Despesa' : true;
+                const nomeCategoria = catObj ? catObj.nome : "Desconhecida";
+
+                // Ajusta o sinal do valor (Negativo se for Despesa)
+                if (ehDespesa) novoValor = -Math.abs(novoValor);
                 else novoValor = Math.abs(novoValor);
 
+                // Atualiza o objeto no banco
                 DB.transacoes[index] = {
                     ...transacaoAntiga,
                     data: inputData,
                     descricao: document.getElementById('edit-trans-descricao').value,
-                    valor: novoValor
+                    valor: novoValor,
+                    moeda: novaMoeda,
+                    categoria_id: novaCategoriaId,
+                    categoria: nomeCategoria
                 };
 
                 salvarBanco();
@@ -404,10 +419,29 @@ function excluirCategoria(id) {
 function prepararEdicaoTransacao(id) {
     const t = DB.transacoes.find(x => x.id === id);
     if (!t) return;
+
+    // 1. Preenche os campos básicos
     document.getElementById('edit-trans-id').value = t.id;
     document.getElementById('edit-trans-data').value = t.data;
     document.getElementById('edit-trans-valor').value = Math.abs(t.valor);
     document.getElementById('edit-trans-descricao').value = t.descricao;
+    document.getElementById('edit-trans-moeda').value = t.moeda; // Preenche a moeda
+
+    // 2. Preenche o Select de Categorias dentro do Modal de Edição
+    const selectCat = document.getElementById('edit-trans-categoria');
+    selectCat.innerHTML = '<option value="">Selecione...</option>';
+
+    DB.categorias.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = `${cat.nome} (${cat.tipo})`;
+        selectCat.appendChild(option);
+    });
+
+    // 3. Seleciona a categoria atual da transação
+    selectCat.value = t.categoria_id;
+
+    // 4. Abre o modal
     document.getElementById('modal-editar-transacao').style.display = 'flex';
 }
 
