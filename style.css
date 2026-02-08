@@ -444,10 +444,42 @@ li.minus {
     color: var(--red);
 }
 
-/* Responsivo para Celular */
+/* --- RESPONSIVIDADE PARA CELULAR (Mobile) --- */
 @media (max-width: 768px) {
-    .row-container {
+
+    /* 1. Faz os cards (Transação e Categoria) ficarem um embaixo do outro */
+    .row-container,
+    .dashboard-cards {
         flex-direction: column;
+        gap: 20px;
+    }
+
+    /* 2. Faz Data e Valor ficarem um embaixo do outro */
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* 3. Garante que os campos ocupem a largura total */
+    .input-group,
+    input,
+    select {
+        width: 100%;
+    }
+
+    /* 4. Ajuste no cabeçalho dos cards (Título e Botão) */
+    .card h2 {
+        flex-direction: row;
+        /* Mantém lado a lado se couber */
+        justify-content: space-between;
+        font-size: 1.2rem;
+        /* Diminui um pouco a fonte */
+    }
+
+    /* 5. Ajuste no botão "Ver Extrato/Lista" para não ficar gigante */
+    .btn-ver-lista {
+        padding: 6px 10px;
+        font-size: 0.7rem;
     }
 }
 
