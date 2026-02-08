@@ -1,7 +1,7 @@
 /* --- CONFIGURAÇÃO E DADOS --- */
 const STORAGE_KEY = 'meu_financeiro_db';
 
-// Estrutura inicial dos dados (caso seja o primeiro acesso)
+// Dados iniciais padrão
 const DADOS_INICIAIS = {
     transacoes: [],
     categorias: [
@@ -12,11 +12,9 @@ const DADOS_INICIAIS = {
     ]
 };
 
-// Variável global que segura os dados na memória
 let DB = { transacoes: [], categorias: [] };
 
-/* --- FUNÇÕES DO "BANCO DE DADOS" (LOCALSTORAGE) --- */
-
+/* --- FUNÇÕES DO BANCO (LOCALSTORAGE) --- */
 function carregarBanco() {
     const dadosSalvos = localStorage.getItem(STORAGE_KEY);
     if (dadosSalvos) {
@@ -29,40 +27,38 @@ function carregarBanco() {
 
 function salvarBanco() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
-    atualizarTela(); // Sempre que salvar, atualiza a tela
+    atualizarTela();
 }
 
-// Gera um ID único baseado no relógio (timestamp)
 function gerarId() {
-    return Date.now();
+    return Date.now() + Math.floor(Math.random() * 1000);
 }
 
 /* --- INICIALIZAÇÃO --- */
-
 document.addEventListener('DOMContentLoaded', () => {
     carregarBanco();
-    configurarDatas();
+    configurarDatas(); // Bloqueia calendário futuro
     atualizarTela();
     configurarFormularios();
 });
 
+// FUNÇÃO QUE TRAVA O CALENDÁRIO
 function configurarDatas() {
     const hoje = new Date().toISOString().split('T')[0];
 
     const dataInput = document.getElementById('data');
     if (dataInput) {
         dataInput.value = hoje;
-        dataInput.max = hoje;
+        dataInput.setAttribute('max', hoje); // Bloqueio Visual
     }
 
     const editDataInput = document.getElementById('edit-trans-data');
     if (editDataInput) {
-        editDataInput.max = hoje;
+        editDataInput.setAttribute('max', hoje); // Bloqueio Visual
     }
 }
 
-/* --- ATUALIZAÇÃO DA TELA (RENDERIZAÇÃO) --- */
-
+/* --- RENDERIZAÇÃO --- */
 function atualizarTela() {
     atualizarSelectCategorias();
     calcularTotais();
@@ -72,6 +68,9 @@ function atualizarSelectCategorias() {
     const select = document.getElementById('categoria');
     if (!select) return;
 
+    // Guarda a seleção atual se houver
+    const valorAtual = select.value;
+
     select.innerHTML = '<option value="">Selecione...</option>';
 
     DB.categorias.forEach(cat => {
@@ -80,41 +79,122 @@ function atualizarSelectCategorias() {
         option.textContent = `${cat.nome} (${cat.tipo})`;
         select.appendChild(option);
     });
+
+    // Tenta restaurar a seleção
+    if (valorAtual) select.value = valorAtual;
 }
+
+/* --- FUNÇÃO CORRIGIDA PARA CORES NO SALDO --- */
+
+/* --- FUNÇÃO CORRIGIDA: SEM SINAL DE MENOS --- */
+
+/* --- FUNÇÃO: SALDO, BORDAS E TÍTULOS COLORIDOS --- */
 
 function calcularTotais() {
     let totalBRL = 0;
     let totalEUR = 0;
 
+    // 1. Soma os valores
     DB.transacoes.forEach(t => {
         const val = parseFloat(t.valor);
         if (t.moeda === 'BRL') totalBRL += val;
         else totalEUR += val;
     });
 
-    // Atualiza os cards
-    document.getElementById('saldo-brl').textContent = `R$ ${totalBRL.toFixed(2)}`;
-    document.getElementById('saldo-eur').textContent = `€ ${totalEUR.toFixed(2)}`;
+    // --- ATUALIZA CARD DE REAIS (BRL) ---
+    const cardBRL = document.getElementById('card-brl');
+    const valorBRL = document.getElementById('saldo-brl');
+    const tituloBRL = cardBRL.querySelector('h3'); // Seleciona o título do card
 
-    // Muda a cor se estiver negativo
-    document.getElementById('card-brl').style.borderColor = totalBRL < 0 ? '#E55039' : 'var(--border)';
-    document.getElementById('card-eur').style.borderColor = totalEUR < 0 ? '#E55039' : 'var(--border)';
+    // Define o valor sem sinal negativo
+    valorBRL.textContent = `R$ ${Math.abs(totalBRL).toFixed(2)}`;
+
+    if (totalBRL < 0) {
+        // NEGATIVO (Vermelho)
+        const cor = '#FF6B6B';
+        valorBRL.style.color = cor;
+        cardBRL.style.borderColor = cor;
+        tituloBRL.style.color = cor; // Pinta o título
+    } else if (totalBRL > 0) {
+        // POSITIVO (Verde)
+        const cor = '#2ECC71';
+        valorBRL.style.color = cor;
+        cardBRL.style.borderColor = cor;
+        tituloBRL.style.color = cor; // Pinta o título
+    } else {
+        // ZERO (Cores originais do tema)
+        valorBRL.style.color = 'var(--text)';
+        cardBRL.style.borderColor = 'var(--border)';
+        tituloBRL.style.color = 'var(--text)'; // Volta ao normal
+    }
+
+    // --- ATUALIZA CARD DE EUROS (EUR) ---
+    const cardEUR = document.getElementById('card-eur');
+    const valorEUR = document.getElementById('saldo-eur');
+    const tituloEUR = cardEUR.querySelector('h3'); // Seleciona o título do card
+
+    valorEUR.textContent = `€ ${Math.abs(totalEUR).toFixed(2)}`;
+
+    if (totalEUR < 0) {
+        const cor = '#FF6B6B';
+        valorEUR.style.color = cor;
+        cardEUR.style.borderColor = cor;
+        tituloEUR.style.color = cor;
+    } else if (totalEUR > 0) {
+        const cor = '#2ECC71';
+        valorEUR.style.color = cor;
+        cardEUR.style.borderColor = cor;
+        tituloEUR.style.color = cor;
+    } else {
+        valorEUR.style.color = 'var(--text)';
+        cardEUR.style.borderColor = 'var(--border)';
+        tituloEUR.style.color = 'var(--text)';
+    }
 }
 
-/* --- FORMULÁRIOS (ADICIONAR) --- */
-
+/* --- FORMULÁRIOS --- */
 function configurarFormularios() {
-    // 1. SALVAR TRANSAÇÃO
+
+    // 1. SALVAR CATEGORIA (Corrigido)
+    const formCat = document.getElementById('form-categoria');
+    if (formCat) {
+        formCat.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log("Salvando Categoria..."); // Debug
+
+            const nomeInput = document.getElementById('cat-nome');
+            const tipoInput = document.getElementById('cat-tipo');
+
+            if (!nomeInput.value) {
+                alert("Digite um nome para a categoria!");
+                return;
+            }
+
+            const novaCategoria = {
+                id: gerarId(),
+                nome: nomeInput.value,
+                tipo: tipoInput.value
+            };
+
+            DB.categorias.push(novaCategoria);
+            salvarBanco(); // Salva e atualiza tela
+
+            nomeInput.value = ''; // Limpa campo
+            alert("Categoria criada com sucesso!");
+        });
+    }
+
+    // 2. SALVAR TRANSAÇÃO
     const formTrans = document.getElementById('form-transacao');
     if (formTrans) {
         formTrans.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            // Validação de Data Futura
+            // Bloqueio Lógico de Data Futura
             const inputData = document.getElementById('data').value;
             const hoje = new Date().toISOString().split('T')[0];
             if (inputData > hoje) {
-                alert("⚠️ Não é permitido adicionar transações com data futura!");
+                alert("⚠️ Erro: Data futura não permitida!");
                 return;
             }
 
@@ -124,13 +204,11 @@ function configurarFormularios() {
                 return;
             }
 
-            // Descobre o nome da categoria pelo ID selecionado
             const catId = parseInt(selectCat.value);
             const catObj = DB.categorias.find(c => c.id === catId);
             const nomeCategoria = catObj ? catObj.nome : "Desconhecida";
             const ehDespesa = catObj ? catObj.tipo === 'Despesa' : true;
 
-            // Tratamento do valor (Negativo se for Despesa)
             let valorInput = parseFloat(document.getElementById('valor').value);
             if (ehDespesa) valorInput = -Math.abs(valorInput);
             else valorInput = Math.abs(valorInput);
@@ -142,7 +220,7 @@ function configurarFormularios() {
                 valor: valorInput,
                 moeda: document.getElementById('moeda').value,
                 categoria_id: catId,
-                categoria: nomeCategoria // Salvamos o nome junto para facilitar
+                categoria: nomeCategoria
             };
 
             DB.transacoes.push(novaTransacao);
@@ -150,30 +228,6 @@ function configurarFormularios() {
 
             formTrans.reset();
             document.getElementById('data').value = hoje;
-            alert("Transação salva com sucesso!");
-        });
-    }
-
-    // 2. SALVAR CATEGORIA
-    const formCat = document.getElementById('form-categoria');
-    if (formCat) {
-        formCat.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const nome = document.getElementById('cat-nome').value;
-            const tipo = document.getElementById('cat-tipo').value;
-
-            const novaCategoria = {
-                id: gerarId(),
-                nome: nome,
-                tipo: tipo
-            };
-
-            DB.categorias.push(novaCategoria);
-            salvarBanco();
-
-            document.getElementById('cat-nome').value = '';
-            alert("Categoria criada!");
         });
     }
 
@@ -183,22 +237,20 @@ function configurarFormularios() {
         formEdit.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const id = parseInt(document.getElementById('edit-trans-id').value);
             const inputData = document.getElementById('edit-trans-data').value;
             const hoje = new Date().toISOString().split('T')[0];
-
             if (inputData > hoje) {
-                alert("⚠️ Data não pode ser futura!");
+                alert("⚠️ Data futura não permitida na edição!");
                 return;
             }
 
-            // Encontra e atualiza
+            const id = parseInt(document.getElementById('edit-trans-id').value);
             const index = DB.transacoes.findIndex(t => t.id === id);
+
             if (index !== -1) {
                 const transacaoAntiga = DB.transacoes[index];
                 let novoValor = parseFloat(document.getElementById('edit-trans-valor').value);
 
-                // Mantém o sinal original (se era negativo, continua negativo)
                 if (transacaoAntiga.valor < 0) novoValor = -Math.abs(novoValor);
                 else novoValor = Math.abs(novoValor);
 
@@ -211,14 +263,7 @@ function configurarFormularios() {
 
                 salvarBanco();
                 fecharModal('modal-editar-transacao');
-
-                // Atualiza a lista que estava aberta
-                if (document.getElementById('modal-transacoes-moeda').style.display === 'flex') {
-                    const titulo = document.getElementById('titulo-modal-moeda').innerText;
-                    if (titulo.includes('Extrato')) abrirExtratoCompleto();
-                    else if (titulo.includes('BRL')) abrirModalTransacoesMoeda('BRL');
-                    else if (titulo.includes('EUR')) abrirModalTransacoesMoeda('EUR');
-                }
+                atualizarListagemAberta();
             }
         });
     }
@@ -229,21 +274,30 @@ function configurarFormularios() {
         formEditCat.addEventListener('submit', (e) => {
             e.preventDefault();
             const id = parseInt(document.getElementById('edit-cat-id').value);
-
             const index = DB.categorias.findIndex(c => c.id === id);
+
             if (index !== -1) {
                 DB.categorias[index].nome = document.getElementById('edit-cat-nome').value;
                 DB.categorias[index].tipo = document.getElementById('edit-cat-tipo').value;
 
-                salvarBanco();
+                salvarBanco(); // Atualiza tudo (incluindo o select do formulário)
                 fecharModal('modal-editar-categoria');
-                abrirModalListaCategorias(); // Recarrega a lista
+                abrirModalListaCategorias();
             }
         });
     }
 }
 
-/* --- MODAIS E LISTAGENS --- */
+/* --- FUNÇÕES AUXILIARES --- */
+function atualizarListagemAberta() {
+    const modal = document.getElementById('modal-transacoes-moeda');
+    if (modal.style.display === 'flex') {
+        const titulo = document.getElementById('titulo-modal-moeda').innerText;
+        if (titulo.includes('Extrato')) abrirExtratoCompleto();
+        else if (titulo.includes('BRL')) abrirModalTransacoesMoeda('BRL');
+        else if (titulo.includes('EUR')) abrirModalTransacoesMoeda('EUR');
+    }
+}
 
 function abrirExtratoCompleto() {
     const modal = document.getElementById('modal-transacoes-moeda');
@@ -254,12 +308,9 @@ function abrirExtratoCompleto() {
     corpo.innerHTML = '';
 
     const todas = DB.transacoes.sort((a, b) => new Date(b.data) - new Date(a.data));
+    if (todas.length === 0) corpo.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Vazio.</td></tr>';
+    else todas.forEach(t => renderizarLinhaTransacao(t, corpo));
 
-    if (todas.length === 0) {
-        corpo.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum registro encontrado.</td></tr>';
-    } else {
-        todas.forEach(t => renderizarLinhaTransacao(t, corpo));
-    }
     modal.style.display = 'flex';
 }
 
@@ -271,15 +322,12 @@ function abrirModalTransacoesMoeda(moeda) {
     titulo.innerText = `Despesas em ${moeda}`;
     corpo.innerHTML = '';
 
-    const filtradas = DB.transacoes
-        .filter(t => t.moeda === moeda && t.valor < 0)
+    const filtradas = DB.transacoes.filter(t => t.moeda === moeda && t.valor < 0)
         .sort((a, b) => new Date(b.data) - new Date(a.data));
 
-    if (filtradas.length === 0) {
-        corpo.innerHTML = '<tr><td colspan="5" style="padding:20px; text-align:center;">Nenhuma despesa encontrada.</td></tr>';
-    } else {
-        filtradas.forEach(t => renderizarLinhaTransacao(t, corpo));
-    }
+    if (filtradas.length === 0) corpo.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhuma despesa.</td></tr>';
+    else filtradas.forEach(t => renderizarLinhaTransacao(t, corpo));
+
     modal.style.display = 'flex';
 }
 
@@ -289,13 +337,13 @@ function renderizarLinhaTransacao(t, tbody) {
 
     const val = parseFloat(t.valor);
     const ehDespesa = val < 0;
-    const corValor = ehDespesa ? '#FF6B6B' : '#2ECC71';
 
-    // Tenta achar o tipo da categoria para pintar o badge
+    // Busca categoria atualizada (caso tenha mudado de nome)
     const catObj = DB.categorias.find(c => c.id === t.categoria_id);
+    const nomeCat = catObj ? catObj.nome : t.categoria;
     const tipoCat = catObj ? catObj.tipo : (ehDespesa ? 'Despesa' : 'Receita');
     const badgeClass = tipoCat === 'Receita' ? 'badge-receita' : 'badge-despesa';
-    const nomeCat = catObj ? catObj.nome : t.categoria;
+    const corValor = ehDespesa ? '#FF6B6B' : '#2ECC71';
 
     tr.innerHTML = `
         <td style="padding: 10px;">${new Date(t.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
@@ -305,12 +353,8 @@ function renderizarLinhaTransacao(t, tbody) {
             ${t.moeda === 'BRL' ? 'R$' : '€'} ${Math.abs(val).toFixed(2)}
         </td>
         <td style="text-align: right;">
-            <button class="btn-action edit" onclick="prepararEdicaoTransacao(${t.id})">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn-action delete" onclick="excluirTransacao(${t.id})">
-                <i class="fas fa-trash"></i>
-            </button>
+            <button class="btn-action edit" onclick="prepararEdicaoTransacao(${t.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn-action delete" onclick="excluirTransacao(${t.id})"><i class="fas fa-trash"></i></button>
         </td>
     `;
     tbody.appendChild(tr);
@@ -319,7 +363,6 @@ function renderizarLinhaTransacao(t, tbody) {
 function abrirModalListaCategorias() {
     const modal = document.getElementById('modal-lista-categorias');
     const tbody = document.getElementById('tabela-categorias-body');
-
     tbody.innerHTML = '';
 
     DB.categorias.forEach(c => {
@@ -331,12 +374,8 @@ function abrirModalListaCategorias() {
             <td style="padding: 10px;">${c.nome}</td>
             <td><span class="badge ${badgeClass}">${c.tipo}</span></td>
             <td style="text-align: right;">
-                <button class="btn-action edit" onclick="prepararEdicaoCategoria(${c.id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-action delete" onclick="excluirCategoria(${c.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <button class="btn-action edit" onclick="prepararEdicaoCategoria(${c.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn-action delete" onclick="excluirCategoria(${c.id})"><i class="fas fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -344,31 +383,19 @@ function abrirModalListaCategorias() {
     modal.style.display = 'flex';
 }
 
-/* --- FUNÇÕES DE AÇÃO (EXCLUIR / EDITAR) --- */
-
 function excluirTransacao(id) {
-    if (!confirm("Tem certeza que deseja apagar?")) return;
-
+    if (!confirm("Tem certeza?")) return;
     DB.transacoes = DB.transacoes.filter(t => t.id !== id);
     salvarBanco();
-
-    // Atualiza a lista aberta
-    const titulo = document.getElementById('titulo-modal-moeda').innerText;
-    if (titulo.includes('Extrato')) abrirExtratoCompleto();
-    else if (titulo.includes('BRL')) abrirModalTransacoesMoeda('BRL');
-    else if (titulo.includes('EUR')) abrirModalTransacoesMoeda('EUR');
+    atualizarListagemAberta();
 }
 
 function excluirCategoria(id) {
-    // Verifica se está em uso
-    const emUso = DB.transacoes.some(t => t.categoria_id === id);
-    if (emUso) {
-        alert("Não é possível excluir: Existem transações usando esta categoria!");
+    if (DB.transacoes.some(t => t.categoria_id === id)) {
+        alert("Erro: Categoria em uso por transações!");
         return;
     }
-
     if (!confirm("Excluir categoria?")) return;
-
     DB.categorias = DB.categorias.filter(c => c.id !== id);
     salvarBanco();
     abrirModalListaCategorias();
@@ -377,35 +404,22 @@ function excluirCategoria(id) {
 function prepararEdicaoTransacao(id) {
     const t = DB.transacoes.find(x => x.id === id);
     if (!t) return;
-
     document.getElementById('edit-trans-id').value = t.id;
     document.getElementById('edit-trans-data').value = t.data;
     document.getElementById('edit-trans-valor').value = Math.abs(t.valor);
     document.getElementById('edit-trans-descricao').value = t.descricao;
-
-    // Abre o modal de edição (certifique-se de ter esse modal no HTML)
-    // Se não tiver, me avise que criamos!
-    const modalEdit = document.getElementById('modal-editar-transacao');
-    if (modalEdit) modalEdit.style.display = 'flex';
+    document.getElementById('modal-editar-transacao').style.display = 'flex';
 }
 
 function prepararEdicaoCategoria(id) {
     const c = DB.categorias.find(x => x.id === id);
     if (!c) return;
-
     document.getElementById('edit-cat-id').value = c.id;
     document.getElementById('edit-cat-nome').value = c.nome;
     document.getElementById('edit-cat-tipo').value = c.tipo;
-
-    const modalEdit = document.getElementById('modal-editar-categoria');
-    if (modalEdit) modalEdit.style.display = 'flex';
+    document.getElementById('modal-editar-categoria').style.display = 'flex';
 }
 
-/* --- FUNÇÕES GENÉRICAS DE MODAL --- */
 function fecharModal(id) {
     document.getElementById(id).style.display = 'none';
-}
-function fecharEEditar(tStr) {
-    // Função legada adaptada (caso o HTML ainda chame essa)
-    // O ideal é usar prepararEdicaoTransacao(id)
 }
