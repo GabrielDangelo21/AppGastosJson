@@ -249,6 +249,48 @@ label {
     letter-spacing: 0.5px;
 }
 
+/* --- CORREÇÃO DE ALTURA DOS CAMPOS (BRL e Data) --- */
+
+input,
+select {
+    /* 1. Define uma altura fixa igual para todos */
+    height: 45px !important;
+    min-height: 45px;
+
+    /* 2. Garante que o texto fique no meio */
+    line-height: 45px;
+
+    /* 3. Remove paddings verticais que o celular adiciona sozinho */
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 12px;
+    /* Mantém o espaçamento lateral */
+
+    /* 4. Garante que a borda não aumente o tamanho total */
+    box-sizing: border-box;
+
+    /* Mantém o visual bonito */
+    width: 100%;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    margin-top: 5px;
+    /* Espaço entre o label e o input */
+}
+
+/* Ajuste específico para garantir que o Select (combo box) obedeça */
+select {
+    -webkit-appearance: none;
+    /* Remove estilo nativo do iPhone */
+    appearance: none;
+    /* Reaplicamos a seta personalizada que fizemos antes */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23DE7461'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 15px;
+}
+
 input,
 select {
     background: var(--input-bg);
