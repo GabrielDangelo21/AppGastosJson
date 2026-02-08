@@ -5,10 +5,6 @@ const STORAGE_KEY = 'meu_financeiro_db';
 const DADOS_INICIAIS = {
     transacoes: [],
     categorias: [
-        { id: 1, nome: 'Alimentação', tipo: 'Despesa' },
-        { id: 2, nome: 'Salário', tipo: 'Receita' },
-        { id: 3, nome: 'Lazer', tipo: 'Despesa' },
-        { id: 4, nome: 'Transporte', tipo: 'Despesa' }
     ]
 };
 
