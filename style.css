@@ -257,16 +257,14 @@ select {
     height: 45px !important;
     min-height: 45px;
 
-    /* 2. Garante que o texto fique no meio */
+    /* 2. Remover paddings verticais e usar line-height para centralizar */
+    padding: 0 12px;
+    line-height: normal; /* "normal" evita cortes no iOS e funciona bem com padding em alguns casos, mas "45px" estava no original. */
+    /* Para garantir a compatibilidade com o height fixo sem cortar fonte, o normal é melhor se usarmos flex ou se a box for border-box e a fonte normal. 
+       Na verdade, com padding 0, line-height 45px é o original e estava funcionando nos inputs. */
     line-height: 45px;
 
-    /* 3. Remove paddings verticais que o celular adiciona sozinho */
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 12px;
-    /* Mantém o espaçamento lateral */
-
-    /* 4. Garante que a borda não aumente o tamanho total */
+    /* 3. Garante que a borda não aumente o tamanho total */
     box-sizing: border-box;
 
     /* Mantém o visual bonito */
@@ -276,62 +274,23 @@ select {
     color: var(--text);
     border-radius: 8px;
     margin-top: 5px;
-    /* Espaço entre o label e o input */
-}
-
-/* Ajuste específico para garantir que o Select (combo box) obedeça */
-select {
-    -webkit-appearance: none;
-    /* Remove estilo nativo do iPhone */
-    appearance: none;
-    /* Reaplicamos a seta personalizada que fizemos antes */
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23DE7461'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 15px;
-}
-
-input,
-select {
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px;
-    border-radius: 6px;
-    width: 100%;
-    /* Ocupa todo o espaço do input-group */
-    box-sizing: border-box;
-    /* Evita que o padding "estoure" a largura */
     font-size: 0.9rem;
 }
 
+/* Ajuste específico para garantir que o Select obedeça e tenha a seta customizada */
 select {
-    /* 1. Remove a seta padrão "feia" do sistema */
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
 
-    /* 2. Adiciona nossa própria seta (SVG na cor Laranja #DE7461) */
+    /* Seta personalizada Laranja #DE7461 */
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23DE7461'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-
-    /* 3. Posiciona a seta exatamente onde queremos */
     background-repeat: no-repeat;
     background-position: right 15px center;
-    /* 15px de distância da borda direita! */
-    background-size: 20px;
-    /* Tamanho da seta */
+    background-size: 15px;
 
-    /* 4. Garante espaço interno para o texto não ficar em cima da seta */
+    /* Garante espaço interno para o texto não ficar em cima da seta */
     padding-right: 45px;
-
-    /* Mantém as outras configurações de cor */
-    background-color: var(--input-bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding-left: 12px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    border-radius: 8px;
     cursor: pointer;
 }
 
