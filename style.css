@@ -219,6 +219,19 @@ h2 {
     font-weight: 300;
 }
 
+header h1 {
+    display: flex;
+    align-items: center;
+}
+
+.app-logo {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
 /* --- FORMULÁRIOS --- */
 .form-row {
     display: flex;
@@ -259,7 +272,8 @@ select {
 
     /* 2. Remover paddings verticais e usar line-height para centralizar */
     padding: 0 12px;
-    line-height: normal; /* "normal" evita cortes no iOS e funciona bem com padding em alguns casos, mas "45px" estava no original. */
+    line-height: normal;
+    /* "normal" evita cortes no iOS e funciona bem com padding em alguns casos, mas "45px" estava no original. */
     /* Para garantir a compatibilidade com o height fixo sem cortar fonte, o normal é melhor se usarmos flex ou se a box for border-box e a fonte normal. 
        Na verdade, com padding 0, line-height 45px é o original e estava funcionando nos inputs. */
     line-height: 45px;
